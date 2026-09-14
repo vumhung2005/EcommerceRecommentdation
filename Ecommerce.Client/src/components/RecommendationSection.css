@@ -1,0 +1,211 @@
+/* =====================================================
+   RECOMMENDATION SECTION
+===================================================== */
+
+.recommendation-section {
+  width: 1200px;
+
+  max-width: calc(100% - 40px);
+
+  margin: 25px auto;
+
+  background: white;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+}
+
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.recommendation-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  border-bottom: 2px solid #ee4d2d;
+
+  padding-bottom: 12px;
+
+  margin-bottom: 15px;
+}
+
+.recommendation-header h2 {
+  margin: 0;
+
+  color: #333;
+
+  font-size: 20px;
+
+  font-weight: 600;
+}
+
+.recommendation-header p {
+  margin: 5px 0 0;
+
+  color: #888;
+
+  font-size: 13px;
+}
+
+
+/* =====================================================
+   AI LABEL
+===================================================== */
+
+.ai-label {
+  background: #fff3ef;
+
+  color: #ee4d2d;
+
+  border: 1px solid #ee4d2d;
+
+  border-radius: 3px;
+
+  padding: 6px 10px;
+
+  font-size: 12px;
+
+  font-weight: 600;
+}
+
+
+/* =====================================================
+   GRID
+===================================================== */
+
+.recommendation-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+
+  gap: 10px;
+
+  width: 100%;
+}
+
+
+/* =====================================================
+   LOADING
+===================================================== */
+
+.recommendation-loading {
+  min-height: 120px;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  color: #888;
+
+  font-size: 14px;
+}
+
+
+/* =====================================================
+   EMPTY
+===================================================== */
+
+.recommendation-empty {
+  min-height: 150px;
+
+  background: #fafafa;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+}
+
+.recommendation-empty-icon {
+  font-size: 40px;
+
+  margin-bottom: 8px;
+}
+
+.recommendation-empty h3 {
+  margin: 0 0 8px;
+
+  font-size: 16px;
+
+  color: #444;
+}
+
+.recommendation-empty p {
+  max-width: 550px;
+
+  margin: 0;
+
+  color: #888;
+
+  font-size: 13px;
+
+  line-height: 20px;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 1000px) {
+
+  .recommendation-grid {
+    grid-template-columns:
+      repeat(4, minmax(0, 1fr));
+  }
+
+}
+
+
+@media (max-width: 800px) {
+
+  .recommendation-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .recommendation-section {
+    max-width: calc(100% - 20px);
+
+    padding: 10px;
+  }
+
+  .recommendation-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .recommendation-header {
+    align-items: flex-start;
+
+    gap: 10px;
+  }
+
+  .ai-label {
+    display: none;
+  }
+
+}

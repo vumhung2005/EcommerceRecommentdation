@@ -1,0 +1,53 @@
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1M2RkM2FiOS03ZGQ1LTRjZTItOWNiYi1iMDg3YmI4YWVlNDEiLCJlbWFpbCI6Imh1bmdAZ21haWwuY29tIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZWlkZW50aWZpZXIiOiI1M2RkM2FiOS03ZGQ1LTRjZTItOWNiYi1iMDg3YmI4YWVlNDEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiaHVuZ0BnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiVXNlciIsIkFkbWluIl0sImV4cCI6MTc4NzM3MDA0MywiaXNzIjoiRWNvbW1lcmNlLkFQSSIsImF1ZCI6IkVjb21tZXJjZS5DbGllbnQifQ.VlA_JkRBAkcFy4L47VMyGMoRbgVZAZxailyIJgfPibc
+Content-Type: application/json
+
+{
+    "fullName": "Nguyen Van Hung",
+    "email": "hung@gmail.com",
+    "password": "Password@123"
+}
+
+###
+
+### LOGIN
+POST http://localhost:5116/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "hung@gmail.com",
+    "password": "Password@123"
+}
+###
+### Đăng ký User 1
+POST http://localhost:5116/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "nguyenvana@gmail.com",
+    "password": "Password@123",
+    "fullName": "Nguyen Van A"
+}
+
+###
+
+### Đăng ký User 2
+POST http://localhost:5116/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "nguynthib@gmail.com",
+    "password": "Password@123",
+    "fullName": "Nguyen Thi B"
+}
+
+###
+
+### Đăng ký User 3
+POST http://localhost:5116/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "tranvanc@gmail.com",
+    "password": "Password@123",
+    "fullName": "Tran Van C"
+}

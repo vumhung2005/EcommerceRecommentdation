@@ -1,0 +1,39 @@
+.profile-page {
+  background: #f5f5f5;
+  min-height: calc(100vh - 120px);
+  padding: 50px 0;
+}
+
+.profile-card {
+  width: min(500px, 90%);
+  margin: auto;
+  background: white;
+  text-align: center;
+  padding: 40px;
+}
+
+.profile-avatar {
+  width: 90px;
+  height: 90px;
+  margin: auto;
+  border-radius: 50%;
+  background: #fff1ed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 45px;
+}
+
+.profile-actions {
+  margin-top: 30px;
+  display: grid;
+  gap: 10px;
+}
+
+.profile-actions button {
+  padding: 13px;
+  border: 1px solid #ee4d2d;
+  background: white;
+  color: #ee4d2d;
+  cursor: pointer;
+}

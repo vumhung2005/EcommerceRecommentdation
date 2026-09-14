@@ -1,0 +1,33 @@
+.flash-section {
+  background: white;
+  margin-top: 15px;
+}
+
+.flash-header {
+  height: 55px;
+
+  display: flex;
+  align-items: center;
+  gap: 25px;
+
+  padding: 0 20px;
+
+  border-bottom: 1px solid #eee;
+
+  color: #ee4d2d;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.flash-header span {
+  font-size: 13px;
+  font-weight: normal;
+  color: #555;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 15px;
+}
