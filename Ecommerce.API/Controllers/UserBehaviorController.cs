@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Ecommerce.API.Data;
 using Ecommerce.API.Models;
+using Ecommerce.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,14 @@ namespace Ecommerce.API.Controllers;
 public class UserBehaviorController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly CollaborativeFilteringService _collaborativeService;
 
-    public UserBehaviorController(AppDbContext context)
+    public UserBehaviorController(
+        AppDbContext context,
+        CollaborativeFilteringService collaborativeService)
     {
         _context = context;
+        _collaborativeService = collaborativeService;
     }
 
     
@@ -90,6 +95,14 @@ public class UserBehaviorController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        await _collaborativeService.SaveRecommendationsAsync(
+            userId,
+            topUsers: 5,
+            topProducts: 10);
+
+        var recommendations = await _collaborativeService
+            .GetSavedRecommendationsWithProductsAsync(userId, 10);
+
         return Ok(new
         {
             message = "Ghi nhận hành vi thành công.",
@@ -98,7 +111,8 @@ public class UserBehaviorController : ControllerBase
             productId = behavior.ProductId,
             actionType = behavior.ActionType,
             weight = behavior.Weight,
-            createdAt = behavior.CreatedAt
+            createdAt = behavior.CreatedAt,
+            recommendations
         });
     }
 

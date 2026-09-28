@@ -105,7 +105,7 @@ export async function createBrand(brand) { return request("/brands", { method:"P
 export async function updateBrand(id, brand) { return request(`/brands/${id}`, { method:"PUT", headers:authHeaders(), body:JSON.stringify({ brandId:+id, brandName:brand.name }) }); }
 export async function deleteBrand(id) { return request(`/brands/${id}`, { method:"DELETE", headers:authHeaders() }); }
 
-export async function clickProduct(productId) { if (!token()) return null; try { return await request(`/products/${productId}/click`, { method:"POST", headers:{Authorization:`Bearer ${token()}`} }); } catch(e) { console.warn("Click:",e.message); return null; } }
+export async function clickProduct(productId) { if (!token()) return null; try { const result = await request(`/products/${productId}/click`, { method:"POST", headers:{Authorization:`Bearer ${token()}`} }); window.dispatchEvent(new Event("recommendations:refresh")); return result; } catch(e) { console.warn("Click:",e.message); return null; } }
 export async function getCart() { return request("/cart", { headers:authHeaders() }); }
 export async function addToCart(productId, quantity=1) {
   const result = await request("/cart/items", { method:"POST", headers:authHeaders(), body:JSON.stringify({ productId:+productId, quantity:+quantity }) });
@@ -142,7 +142,7 @@ export async function deleteReview(id) { return request(`/reviews/${id}`,{method
 export async function getMyBehaviors() { return request("/user-behaviors/my",{headers:authHeaders()}); }
 export async function getBehaviorSummary() { return request("/user-behaviors/summary",{headers:authHeaders()}); }
 export async function getProductScores() { return request("/user-behaviors/product-score",{headers:authHeaders()}); }
-export async function createBehavior(productId,actionType) { return request("/user-behaviors",{method:"POST",headers:authHeaders(),body:JSON.stringify({productId:+productId,actionType})}); }
+export async function createBehavior(productId,actionType) { const result = await request("/user-behaviors",{method:"POST",headers:authHeaders(),body:JSON.stringify({productId:+productId,actionType})}); window.dispatchEvent(new Event("recommendations:refresh")); return result; }
 export async function makeAdmin() { return request("/auth/make-admin",{method:"POST",headers:authHeaders()}); }
 export async function becomeSeller() { const data = await request("/auth/become-seller",{method:"POST",headers:authHeaders()}); if (data?.token) localStorage.setItem("token", data.token); if (data?.user) localStorage.setItem("user", JSON.stringify(data.user)); return data; }
 

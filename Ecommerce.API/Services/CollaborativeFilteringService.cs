@@ -400,62 +400,8 @@ public class CollaborativeFilteringService
             }
         }
 
-        var userBehaviors = await _context.UserBehaviors
-            .AsNoTracking()
-            .Where(x => x.UserId == userId)
-            .ToListAsync();
-
-        var interactedProductIds = userBehaviors
-            .Select(x => x.ProductId)
-            .Distinct()
-            .ToList();
-
-        var interactedProducts = await _context.Products
-            .AsNoTracking()
-            .Where(x => interactedProductIds.Contains(x.ProductId))
-            .Select(x => new
-            {
-                x.ProductId,
-                x.CategoryId
-            })
-            .ToListAsync();
-
-        var categoryWeights = interactedProducts
-            .Join(
-                userBehaviors,
-                product => product.ProductId,
-                behavior => behavior.ProductId,
-                (product, behavior) => new
-                {
-                    product.CategoryId,
-                    behavior.Weight
-                })
-            .GroupBy(x => x.CategoryId)
-            .ToDictionary(
-                group => group.Key,
-                group => group.Sum(x => x.Weight));
-
-        var categoryIds = categoryWeights.Keys.ToList();
-        var categoryCandidates = await _context.Products
-            .AsNoTracking()
-            .Where(x =>
-                categoryIds.Contains(x.CategoryId) &&
-                !interactedProductIds.Contains(x.ProductId) &&
-                x.Stock > 0)
-            .Select(x => new
-            {
-                x.ProductId,
-                x.CategoryId
-            })
-            .ToListAsync();
-
-        var categoryScores = categoryCandidates
-            .Where(x => !productScores.ContainsKey(x.ProductId))
-            .ToDictionary(
-                product => product.ProductId,
-                product => (double)categoryWeights[product.CategoryId]);
-
         var collaborativeRecommendations = productScores
+            .Where(x => x.Value > 0)
             .OrderByDescending(x => x.Value)
             .Select(x =>
                 new RecommendationResult
@@ -465,30 +411,9 @@ public class CollaborativeFilteringService
                 })
             .ToList();
 
-        var categoryQuota = Math.Min(3, topProducts / 2);
         var selectedRecommendations = collaborativeRecommendations
-            .Take(Math.Max(0, topProducts - categoryQuota))
-            .Concat(
-                categoryScores
-                    .OrderByDescending(x => x.Value)
-                    .Take(categoryQuota)
-                    .Select(x => new RecommendationResult
-                    {
-                        ProductId = x.Key,
-                        Score = x.Value
-                    }))
             .Take(topProducts)
             .ToList();
-
-        if (selectedRecommendations.Count < topProducts)
-        {
-            selectedRecommendations = selectedRecommendations
-                .Concat(
-                    collaborativeRecommendations
-                        .Skip(selectedRecommendations.Count)
-                        .Take(topProducts - selectedRecommendations.Count))
-                .ToList();
-        }
 
         return selectedRecommendations;
     }
@@ -508,8 +433,21 @@ public class CollaborativeFilteringService
                 topUsers,
                 topProducts);
 
+        var recommendationProductIds = recommendations
+            .Select(x => x.ProductId)
+            .ToHashSet();
+
+        var staleRecommendations = await _context.Recommendations
+            .Where(x =>
+                x.UserId == userId &&
+                !recommendationProductIds.Contains(x.ProductId))
+            .ToListAsync();
+
+        _context.Recommendations.RemoveRange(staleRecommendations);
+
         if (recommendations.Count == 0)
         {
+            await _context.SaveChangesAsync();
             return 0;
         }
 
@@ -576,6 +514,38 @@ public class CollaborativeFilteringService
                 })
             .ToList();
     }
+
+    public async Task<List<RecommendationWithProductResult>>
+        GetSavedRecommendationsWithProductsAsync(
+            string userId,
+            int topProducts = 10)
+    {
+        return await _context.Recommendations
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.Score)
+            .ThenByDescending(x => x.CreatedAt)
+            .Take(topProducts)
+            .Select(x => new RecommendationWithProductResult
+            {
+                ProductId = x.ProductId,
+                Score = x.Score,
+                Product = x.Product == null
+                    ? null
+                    : new RecommendedProductResult
+                    {
+                        ProductId = x.Product.ProductId,
+                        CategoryId = x.Product.CategoryId,
+                        BrandId = x.Product.BrandId,
+                        Name = x.Product.Name,
+                        Description = x.Product.Description,
+                        Price = x.Product.Price,
+                        Stock = x.Product.Stock,
+                        Image = x.Product.Image
+                    }
+            })
+            .ToListAsync();
+    }
 }
 
 
@@ -597,6 +567,30 @@ public class RecommendationResult
     public int ProductId { get; set; }
 
     public double Score { get; set; }
+}
+
+public class RecommendationWithProductResult : RecommendationResult
+{
+    public RecommendedProductResult? Product { get; set; }
+}
+
+public class RecommendedProductResult
+{
+    public int ProductId { get; set; }
+
+    public int CategoryId { get; set; }
+
+    public int BrandId { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+
+    public decimal Price { get; set; }
+
+    public int Stock { get; set; }
+
+    public string? Image { get; set; }
 }
 
 public class UserProductMatrixDemoResult

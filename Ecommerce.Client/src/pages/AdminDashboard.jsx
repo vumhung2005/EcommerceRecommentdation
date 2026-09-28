@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   getProducts,
   getOrders,
+  getOrder,
   getCategories,
   getBrands,
   createProduct,
@@ -49,12 +50,17 @@ export default function AdminDashboard() {
     (r) => String(r).toLowerCase() === "seller",
   );
   const [tab, setTab] = useState("dashboard");
+  const [brandMenuOpen, setBrandMenuOpen] = useState(false);
+  const [selectedBrandId, setSelectedBrandId] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [brandSearch, setBrandSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [cats, setCats] = useState([]);
   const [brands, setBrands] = useState([]);
   const [behaviors, setBehaviors] = useState([]);
   const [dashboard, setDashboard] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [form, setForm] = useState(emptyProduct);
   const [editId, setEditId] = useState(null);
   const [entity, setEntity] = useState(emptyEntity);
@@ -109,6 +115,16 @@ export default function AdminDashboard() {
     }),
     [products, orders, dashboard],
   );
+
+  const filteredProducts = products.filter((product) => {
+    const productBrandId = product.brandId ?? product.BrandId;
+    const productCategoryId = product.categoryId ?? product.CategoryId;
+    return (
+      (!selectedBrandId || Number(productBrandId) === Number(selectedBrandId)) &&
+      (!selectedCategoryId ||
+        Number(productCategoryId) === Number(selectedCategoryId))
+    );
+  });
 
   const saveProduct = async (e) => {
     e.preventDefault();
@@ -209,6 +225,14 @@ export default function AdminDashboard() {
     }
   };
 
+  const viewOrderDetails = async (id) => {
+    try {
+      setSelectedOrder(await getOrder(id));
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
   if (loading) return <div className="page-message">Đang tải quản trị...</div>;
 
   return (
@@ -225,7 +249,7 @@ export default function AdminDashboard() {
           "dashboard",
           "products",
           "product-form",
-          ...(admin ? ["orders", "categories", "brands"] : []),
+          ...(admin ? ["orders", "categories"] : []),
         ].map((key) => {
           const labels = {
             dashboard: "📊 Dashboard",
@@ -233,7 +257,6 @@ export default function AdminDashboard() {
             "product-form": "➕ Thêm sản phẩm",
             orders: "🛒 Đơn hàng",
             categories: "🗂️ Danh mục",
-            brands: "🏷️ Thương hiệu",
           };
           return (
             <button
@@ -251,6 +274,59 @@ export default function AdminDashboard() {
             </button>
           );
         })}
+        {admin && (
+          <div className="admin-brand-nav">
+            <div className="admin-brand-nav-row">
+              <button
+                className={tab === "brands" ? "active" : ""}
+                onClick={() => setTab("brands")}
+              >
+                🏷️ Thương hiệu
+              </button>
+              <button
+                className="admin-brand-toggle"
+                type="button"
+                aria-label={brandMenuOpen ? "Thu gọn thương hiệu" : "Mở danh sách thương hiệu"}
+                aria-expanded={brandMenuOpen}
+                onClick={() => setBrandMenuOpen((open) => !open)}
+              >
+                <span className={brandMenuOpen ? "expanded" : ""}>▸</span>
+              </button>
+            </div>
+            {brandMenuOpen && (
+              <div className="admin-brand-submenu">
+                <button
+                  className={!selectedBrandId && tab === "products" ? "active" : ""}
+                  onClick={() => {
+                    setSelectedBrandId("");
+                    setSelectedCategoryId("");
+                    setTab("products");
+                  }}
+                >
+                  Tất cả sản phẩm
+                </button>
+                {brands.map((brand) => (
+                  <button
+                    key={brand.brandId}
+                    className={
+                      tab === "products" &&
+                      Number(selectedBrandId) === Number(brand.brandId)
+                        ? "active"
+                        : ""
+                    }
+                    onClick={() => {
+                      setSelectedBrandId(String(brand.brandId));
+                      setSelectedCategoryId("");
+                      setTab("products");
+                    }}
+                  >
+                    {brand.brandName}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <div className="admin-side-bottom">
           <Link to="/">🏠 Về cửa hàng</Link>
         </div>
@@ -360,6 +436,37 @@ export default function AdminDashboard() {
                 + Thêm
               </button>
             </div>
+            <div className="product-filters">
+              <label>
+                Danh mục
+                <select
+                  value={selectedCategoryId}
+                  onChange={(e) => setSelectedCategoryId(e.target.value)}
+                >
+                  <option value="">Tất cả danh mục</option>
+                  {cats.map((category) => (
+                    <option key={category.categoryId} value={category.categoryId}>
+                      {category.categoryName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Thương hiệu
+                <select
+                  value={selectedBrandId}
+                  onChange={(e) => setSelectedBrandId(e.target.value)}
+                >
+                  <option value="">Tất cả thương hiệu</option>
+                  {brands.map((brand) => (
+                    <option key={brand.brandId} value={brand.brandId}>
+                      {brand.brandName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <span>{filteredProducts.length} sản phẩm</span>
+            </div>
             <div className="table-wrap">
               <table>
                 <thead>
@@ -374,7 +481,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((p) => {
+                  {filteredProducts.map((p) => {
                     const catName =
                       p.category?.categoryName ||
                       cats.find((c) => c.categoryId === p.categoryId)
@@ -412,6 +519,13 @@ export default function AdminDashboard() {
                       </tr>
                     );
                   })}
+                  {!filteredProducts.length && (
+                    <tr>
+                      <td colSpan="7" className="empty-filter-result">
+                        Không có sản phẩm phù hợp.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -565,6 +679,9 @@ export default function AdminDashboard() {
                         </td>
                         <td>
                           <div className="order-actions">
+                            <button onClick={() => viewOrderDetails(o.orderId)}>
+                              Xem chi tiết
+                            </button>
                             {o.status === "Pending" && (
                               <button
                                 className="primary"
@@ -625,8 +742,85 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {selectedOrder && (
+          <div
+            className="order-detail-modal-backdrop"
+            role="presentation"
+            onClick={() => setSelectedOrder(null)}
+          >
+            <section
+              className="order-detail-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="order-detail-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="order-detail-modal-header">
+                <div>
+                  <h2 id="order-detail-title">
+                    Chi tiết đơn hàng #{selectedOrder.orderId}
+                  </h2>
+                  <span
+                    className={`status status-${String(selectedOrder.status).toLowerCase()}`}
+                  >
+                    {selectedOrder.status}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="modal-close"
+                  aria-label="Đóng chi tiết đơn hàng"
+                  onClick={() => setSelectedOrder(null)}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="order-detail-summary">
+                <div>
+                  <strong>Thông tin nhận hàng</strong>
+                  <p>{selectedOrder.receiverName || "Chưa có tên người nhận"}</p>
+                  <p>{selectedOrder.phone || "Chưa có số điện thoại"}</p>
+                  <p>{selectedOrder.shippingAddress || "Chưa có địa chỉ"}</p>
+                </div>
+                <div>
+                  <strong>Thanh toán</strong>
+                  <p>{selectedOrder.paymentMethod || "Chưa xác định"}</p>
+                  <p>Trạng thái: {selectedOrder.payment?.status || "Pending"}</p>
+                  <p>
+                    Ngày đặt: {new Date(selectedOrder.orderDate).toLocaleString("vi-VN")}
+                  </p>
+                </div>
+              </div>
+              <div className="order-detail-items">
+                <strong>Sản phẩm</strong>
+                {selectedOrder.orderDetails?.map((detail) => (
+                  <div key={detail.orderDetailId}>
+                    <span>
+                      {detail.product?.name || `Sản phẩm #${detail.productId}`} × {detail.quantity}
+                    </span>
+                    <b>{money(Number(detail.price || 0) * detail.quantity)}</b>
+                  </div>
+                ))}
+              </div>
+              <div className="order-detail-total">
+                <span>Tổng cộng</span>
+                <strong>{money(selectedOrder.totalAmount)}</strong>
+              </div>
+            </section>
+          </div>
+        )}
+
         {(tab === "categories" || tab === "brands") && (
           <div className="admin-panel">
+            {tab === "brands" && (
+              <input
+                className="brand-search"
+                type="search"
+                placeholder="Tìm thương hiệu..."
+                value={brandSearch}
+                onChange={(e) => setBrandSearch(e.target.value)}
+              />
+            )}
             <form className="inline-form" onSubmit={saveEntity}>
               <input
                 placeholder="Tên"
@@ -638,7 +832,14 @@ export default function AdminDashboard() {
               </button>
             </form>
             <div className="simple-list">
-              {(tab === "categories" ? cats : brands).map((x) => {
+              {(tab === "categories"
+                ? cats
+                : brands.filter((brand) =>
+                    brand.brandName
+                      .toLowerCase()
+                      .includes(brandSearch.trim().toLowerCase()),
+                  )
+              ).map((x) => {
                 const id = tab === "categories" ? x.categoryId : x.brandId;
                 const name =
                   tab === "categories" ? x.categoryName : x.brandName;
